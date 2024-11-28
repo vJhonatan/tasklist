@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, TextInput, Button, ScrollView } from 'react-native';
 import TaskCard from './TaskCard'
 import { useState , useEffect } from 'react';
-import { getRequest } from './api/Api';
+import { getRequest , postRequest, deleteRequest } from './api/Api';
 
 export default function App() {
 
@@ -11,20 +11,16 @@ export default function App() {
   const [alert1, setAlert1] = useState(false);
   const [alert2, setAlert2] = useState(false);
 
-  const onMessage = () => {
+  const onMessage = async () => {
 
     setAlert1(false);
     setAlert2(false);
 
     if (taskTitle !== "" && taskDescription.length >= 10) {
-      setTask([
-        ...task,
-        {
-          id: task.length + 1,
-          title: taskTitle,
-          description: taskDescription
-        }
-      ])
+
+      let newTask = await postRequest(taskTitle, taskDescription);
+
+      setTask(newTask);
 
       setTaskTitle("");
       setTaskDescription("");
@@ -46,9 +42,10 @@ export default function App() {
     }
   }
 
-  const deleteTask = (index) => {
+  const deleteTask = (index,id) => {
     const updateTasks = [...task];
-    updateTasks.splice(index, 1)
+    updateTasks.splice(index, 1);
+    deleteRequest(id);
     setTask(updateTasks);
   }
 
@@ -102,7 +99,7 @@ export default function App() {
             () => onMessage()}
         />
 
-      </View>
+      </View> 
 
       {
         task.length > 0 ? <View style={styles.separator} /> : <> </>
@@ -113,13 +110,14 @@ export default function App() {
           task.map((item, index) => (
 
             <TaskCard
+              key={item.id}
               title={item.title}
               desc={item.description}
               status={"Done"}
-              onclick={() => {
-                deleteTask();
-              }} />
-          ))}
+              onclick={() => deleteTask(index,item.id)}
+            /> 
+          ))
+        }
       </ScrollView>
     </View>
   );
